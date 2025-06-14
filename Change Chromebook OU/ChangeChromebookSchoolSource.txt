@@ -1,0 +1,29 @@
+function getDeviceId(serialnum) {
+
+  var optionalArgs = { projection: 'FULL', query: serialnum, };
+
+  var chromebook = (AdminDirectory.Chromeosdevices.list("my_customer", optionalArgs));
+  var chromebookDevID = chromebook.chromeosdevices[0].deviceId;
+  var chromebookOU = chromebook.chromeosdevices[0].orgUnitPath;
+
+  var results = [chromebookDevID, chromebookOU];
+  return results;
+}
+ 
+//Go to https://admin.google.com/ac/orgunits and enter the OU you want to move the Chromebooks to, putting the name of the OU after the "/Chromebooks/" below
+const destinationOU = '/Chromebooks/HS Chromebooks';
+
+const workbook = SpreadsheetApp.openById('GoogleSheetsIDHere'); //Enter Google Sheets ID here
+var sheet = workbook.getSheets()[0];
+
+var range = sheet.getDataRange();
+var serials = range.getValues();
+
+
+for (var counter = 0; counter < serials.length; counter = counter + 1) {
+  var returnedVar = getDeviceId(serials[counter]);
+  Logger.log("%s Changed %s to %s", counter +1, serials[counter], destinationOU)
+  var sourceOU = returnedVar[1]
+
+  AdminDirectory.Chromeosdevices.update({orgUnitPath: destinationOU,}, 'my_customer', returnedVar[0])
+}
